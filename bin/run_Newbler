@@ -1,0 +1,443 @@
+#!/usr/bin/env bash
+
+#============================================================================{{{
+#          FILE:  run_Newbler
+#
+#         USAGE:  script_name settings_filename
+#   DESCRIPTION:  Creates and submits a job to 'qsub' or 'at' for the specific app.
+#  REQUIREMENTS:  at, qsub, The App
+#
+#        AUTHOR:  B. Leopold (cometsong), bleopoldNOSPAM@uni-muenster.de
+#       COMPANY:  Universitaetsklinik Muenster
+#       CREATED:  2012-04-13 12:43:22+0200
+#       REVISED:  2012-08-14 14:24:57+0100 v1.6 added util function, refactored for template
+#       REVISED:  2013-06-11 11:15:59+0200 v1.9 combined 'at' and 'qsub' versions into single script
+#                                               for easier updates with new apps in the future.
+#       REVISED:  2013-07-24 09:53:08+0200 v2.0 installed torque on single server with 'at'. Setup
+#                                               to use hostname as well as 'at|qsub'
+#       REVISED:  2013-09-17 13:49:41+0200 v2.1 mod several functions
+#       REVISED:  2013-09-24 09:31:16+0200 v2.2 moved queue_details to separate file for DRY
+#      REVISION:  2.2
+#===============================================================================
+# TODO: repair 'at' emailing function syntax errors in cmd_file_AT, cmd_file_POST_AT
+#===============================================================================
+
+# set -o nounset          # Treat unset variables as an error
+# set -o errexit          # Abort script at first error, when a command exits with non-zero status (except in until or while loops, if-tests, list constructs)
+# set -o xtrace           # Print each command (expanded) to stdout before executing it (good for debugging)
+#}}}
+
+# ---------------------------------------------------------------------------- #
+#                              Basic CMD Info                               {{{#
+# ---------------------------------------------------------------------------- #
+
+# HOST Name setting:
+HOST=$(uname -n)
+
+# This must be set when installing this script on the server: Cluster or Local?
+# => JOB_SUBMITTER=(qsub|at)
+JOB_SUBMITTER=${JOB_SUBMITTER:-'qsub'}
+
+# actual path of CMD binaries for the different server types:
+if [[ "$HOST" == 'NGS-Anal' || "$JOB_SUBMITTER" == 'at' ]]; then #{{{
+    BIN_BASE="/usr/local/454/bin"
+    #}}}
+elif [[ "$HOST" == 'palma001' ]]; then #{{{
+    BIN_BASE="/share/Applic.PALMA/newbler/454/bin"
+    #}}}
+else # some unknown hostname #{{{
+    BIN_BASE="."
+fi #}}}
+
+APP_CMD="${BIN_BASE}/newbler-stuff-called-separately"
+APP_DESCRIPTION="newbler assembler"
+#}}}
+
+# ---------------------------------------------------------------------------- #
+#                               Usage & Info                                {{{#
+# ---------------------------------------------------------------------------- #
+SCRIPT_NAME=$(basename $0)
+SCRIPT_DIR=$(dirname $0)
+USAGE_MSG="  This script will create and submit a $APP_DESCRIPTION job
+  using specific variables from the file you have edited.
+
+      Usage:  $SCRIPT_NAME  settings_filename"
+
+function usage() {
+    echo
+    echo "$USAGE_MSG"
+    exit
+}
+#}}}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Source Variables ~~~{{{
+# Get settings from the user's file (passed as first argument on cmd line)
+#SETTINGS_FILENAME=${1:?$USAGE_MSG}  # gives error message showing line of script.
+SETTINGS_FILENAME=${1:-''}
+
+echo -n "Running $SCRIPT_NAME... "
+if [ -n "$SETTINGS_FILENAME" ]; then
+    source $SETTINGS_FILENAME
+    echo " with $SETTINGS_FILENAME"
+else
+    usage
+fi
+ #}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  Check Variables - Set defaults, errors ~~~{{{
+DATESTAMP="$(date +%Y%m%d-%H%M%S)"
+PROJECT_NAME=${PROJECT_NAME:-"MyProject"}
+USER_EMAIL=${USER_EMAIL?"Your USER_EMAIL needs to be set for you to get an email when job is complete."}
+BASE_DIR=${BASE_DIR?'The BASE_DIR parameter needs to be set as the base directory that all other dirs come from!'}
+CPUS=${CPUS:-8}
+QUEUE=${QUEUE:-default}
+#}}}
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Check and Set APP Vars ~~~{{{
+NEWBLER_OUTPUT_DIR=${NEWBLER_OUTPUT_DIR:-''}
+NEWBLER_TMP_DIR=${NEWBLER_TMP_DIR:-"${NEWBLER_OUTPUT_DIR}/tmp"}
+NEWBLER_INPUT_FILES=${NEWBLER_INPUT_FILES?"NEWBLER_INPUT_FILES needs to be defined!"}
+
+# Default OUTDIR setting
+APP_OUTDIR="${NEWBLER_OUTPUT_DIR:-${PROJECT_NAME}_results}"
+
+if [[ -n $CONVERT_PE_NEW2OLD_FORMAT ]] ; then
+    CONVERT_PE_CMD="python convert_PE_new2old_format"
+fi
+CONV_SCRIPT_NAME=$BASE_DIR/convert_PE_new2old_format
+
+# for testing purposes, verbose and debug are default turned on. #{{{
+VERBOSE=${VERBOSE:-"-verbose"}
+#VERBOSE=${VERBOSE:-""}
+DEBUG=${DEBUG:-"-debug"}
+#DEBUG=${DEBUG:-""}
+#}}}
+
+# List of all app-specific variable names to be listed when job submitted
+APP_VARS=(
+    NEWBLER_INPUT_FILES
+    NEWBLER_TMP_DIR
+    NEWBLER_OUTPUT_DIR
+    CONVERT_PE_CMD
+    )
+#}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ APP Functions ~~~~~
+function cmd_write_convert_PE_new2old() { #{{{
+rm -f $CONV_SCRIPT_NAME >& /dev/null
+cat > $CONV_SCRIPT_NAME << ENDBLOCK
+#!/usr/bin/env python2
+
+# convert_PE_new2old_format
+
+# Illumina PE-info for newbler
+
+# - old:
+# @ISGA2X_0051_FC64UWKAA:8:6:2626:1313#0/1
+# GAATCCGGGAGAGTACAGAAAAACTGTCGGGGCGATAACCNNNNNANAGTATA
+# +ISGA2X_0051_FC64UWKAA:8:6:2626:1313#0/1
+# a^aa\a^SaSN\\W\fcccaf]cdffffcaffcdc_\_BBBBBBBBBBBBBBB
+
+# - new:
+# @MISEQ:38:000000000-A1GJD:1:1101:16176:1672 1:N:0:
+# TATATCGATGCACGGGAGCATTCTGGAGGAGAGCGACTCTTTGATGACGATTGGA
+# +
+# 5,5,5<,-5@@@@@7+++6+8AACCCC>9+7EEECCCCEFFFBDCDCDEEEED;-
+
+# => conversion from
+#     ' 1:N:0:1' or ' 1:N:0:' to '#0/1 1:N:0:1/1'
+# and ' 2:N:0:1' or ' 2:N:0:' to '#0/2 2:N:0:1/2'
+
+import sys, re
+f = open(sys.argv[1])
+PE = re.compile("(.*) ([12])(:N:0:.*)$")
+
+while 1:
+    l = f.readline()
+    if not l:
+        break
+    l = l.strip()
+    if len(l) < 1:
+        next
+    if l[0] == '@':
+        m = PE.search(l)
+        if m:
+            pp = m.group(1).rsplit(':', 4)
+            pp[0] = pp[0].replace(':', '-')
+            print "%s#0/%s %s%s/%s" % (":".join(pp), m.group(2), m.group(2),m.group(3),m.group(2))
+            continue
+    print l
+
+f.close()
+ENDBLOCK
+} #}}}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Script Functions ~~~~~
+# list all script variables for debugging prints #{{{
+SCRIPT_VARS=(
+    DATESTAMP
+    HOST
+    JOB_SUBMITTER
+    PROJECT_NAME
+    USER_EMAIL
+    BASE_DIR
+    OUTPUT_DIR
+    LOG_DIR
+    CMD_FILE
+    VERBOSE
+    DEBUG
+    CPUS
+    )
+
+if [[ "$JOB_SUBMITTER" == "qsub" ]] ; then
+    SCRIPT_VARS+=( QUEUE QUEUE_RESOURCES USER_GROUP )
+fi
+
+# append app-specific vars
+SCRIPT_VARS+=( ${APP_VARS[@]} )
+
+#}}}
+
+function init_qsub_settings() { #{{{
+# Init variables that ARE qsub specific
+    # load all host-specific job and queue info
+    source $SCRIPT_DIR/queue_details.sh
+
+    # check declared QUEUE name and set matching RESOURCES
+    QUEUE_RESOURCES=$(return_queue_info $HOST $QUEUE)
+    USER_GROUP=$(return_queue_info "$HOST" "user_group")
+
+    # determine CPUS based on processors per node
+    CPUS=$(echo ${QUEUE_RESOURCES} | sed -e "s/.*ppn=\([0-9]*\).*/\1/")
+
+} #}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Create CMD_FILE Functions ~~~~~
+function create_cmd_file() { #{{{
+    # This function writes a file to run CMD,
+    # using the settings from SETTINGS_FILENAME
+    echo "Creating the $APP_DESCRIPTION command script ..."
+
+    rm -f $CMD_FILE >& /dev/null
+    touch $CMD_FILE >& /dev/null
+
+    $(cmd_file_HEADER)
+
+    if [[ "$JOB_SUBMITTER" == 'at' ]]; then
+        $(cmd_file_AT)
+    elif [[ "$JOB_SUBMITTER" == 'qsub' ]]; then
+        init_qsub_settings
+        $(cmd_file_QSUB)
+    fi
+
+    $(cmd_file_EXEC)
+    $(cmd_file_POST)
+
+    if [[ "$JOB_SUBMITTER" == 'at' ]]; then
+        $(cmd_file_POST_AT)
+    fi
+} #}}}
+
+function cmd_file_HEADER() { #{{{
+cat >> $CMD_FILE  << ENDBLOCK
+#! /usr/bin/env bash
+#### This is a cmd file to submit a job you have specified in a settings file.
+#### ... automatically generated by:  "$SCRIPT_NAME"
+#### ... using your settings file:    "$SETTINGS_FILENAME"
+
+ENDBLOCK
+} #}}}
+
+function cmd_file_QSUB() { #{{{
+cat >> $CMD_FILE  << ENDBLOCK
+#PBS -N $PROJECT_NAME.$DATESTAMP
+#PBS -o $PROJECT_NAME.$DATESTAMP.job_output.log
+#PBS -A $USER_GROUP
+#PBS -M $USER_EMAIL
+#PBS -W umask=002
+#PBS -m ae
+#PBS -j oe
+#PBS -q $QUEUE
+#PBS -l $QUEUE_RESOURCES
+
+# source base etc files, varying based on OS
+for BRC in bashrc bash.bashrc; do
+    if [  -f /etc/$BRC ]; then
+        . /etc/$BRC
+    fi
+done
+unset BRC
+
+ENDBLOCK
+} #}}}
+
+function cmd_file_AT() { #{{{
+cat >> $CMD_FILE  << ENDBLOCK
+# email user notification of CMD completion
+#function email_user() {
+#    echo -e "\"$APP_DESCRIPTION\" run has completed at \$DATE_COMPLETED\nThe working directory was $OUTPUT_DIR." \
+#    | mail -a"From:$USER_EMAIL" -s "INFO: $APP_DESCRIPTION run has completed" $USER_EMAIL
+#}
+
+ENDBLOCK
+} #}}}
+
+function cmd_file_EXEC() { #{{{
+if [[ -n "${CONVERT_PE_NEW2OLD_FORMAT}" ]] ; then
+    $(cmd_write_convert_PE_new2old)
+fi
+
+cat >> $CMD_FILE  << ENDBLOCK
+BASE_DIR="${BASE_DIR}"
+OUTPUT_DIR="${OUTPUT_DIR}"
+LOG_DIR="${LOG_DIR}"
+LOG_FILE="${LOG_FILE}"
+
+# make final dirs (output, log)
+mkdir -p \$OUTPUT_DIR
+mkdir -p \$LOG_DIR
+
+cd \$BASE_DIR
+
+NEWBLER_TECH="${NEWBLER_TECH}"
+
+function startNEWBLER() {
+    echo "Preparing NEWBLER assembly" >> \$LOG_FILE 2>&1
+    CMD_STR="${BIN_BASE}/newAssembly -force \${OUTPUT_DIR}"
+    echo "Running:  \$CMD_STR" >> \$LOG_FILE 2>&1
+    eval \$(\$CMD_STR) >> \$LOG_FILE 2>&1
+
+    inputList=( ${NEWBLER_INPUT_FILES//,/ } )
+    for inputFile in \${inputList[@]}; do
+        if [[ -n "${CONVERT_PE_NEW2OLD_FORMAT}" ]] ; then
+            local newInputConvFile="conv.\${inputFile}"
+            python $CONV_SCRIPT_NAME \$inputFile > \$newInputConvFile
+            inputFile=\$newInputConvFile
+        fi
+
+        if [[ "\${NEWBLER_TECH}" == *"PE" ]]; then
+            CMD_STR="${BIN_BASE}/addRun -p -lib Mates \${OUTPUT_DIR} \${inputFile}"
+            echo "Running:  \$CMD_STR" >> \$LOG_FILE
+            eval \$(\$CMD_STR) >> \$LOG_FILE 2>&1
+        else
+            CMD_STR="${BIN_BASE}/addRun -np \${OUTPUT_DIR} \${inputFile}"
+            echo "Running:  \$CMD_STR" >> \$LOG_FILE 2>&1
+            eval \$(\$CMD_STR) >> \$LOG_FILE 2>&1
+        fi
+    done
+
+    if [[ "\${NEWBLER_TECH}" == *"MIS_PE" ]]; then
+        READ_DEPTH="-e 75"
+    elif [[ "\${NEWBLER_TECH}" == "PGM" ]]; then
+        READ_DEPTH="-e 40"
+    fi
+
+    echo "Running NEWBLER" >> \$LOG_FILE 2>&1
+    #CMD_STR="${BIN_BASE}/benchmark \${OUTPUT_DIR}/ ${BIN_BASE}/runProject -ace -infoall -cpu ${CPUS} ${VERBOSE} \${READ_DEPTH} \${OUTPUT_DIR}"
+    CMD_STR="${BIN_BASE}/runProject -ace -infoall -cpu ${CPUS} ${VERBOSE} \${CMD_PART} \${OUTPUT_DIR}"
+    echo "Running:  \$CMD_STR" >> \$LOG_FILE 2>&1
+    eval \$(\$CMD_STR) >> \$LOG_FILE 2>&1
+}
+
+# check if it needed to be resumed:
+for N in {1..9}
+do
+    #LOG_FILE=${LOG_FILE/-job.log/-job.\$N.log}
+    #echo Log_file: \$LOG_FILE >> \$LOG_FILE
+
+    PROGRESS_FILE="${OUTPUT_DIR}/assembly/454NewblerProgress.txt"
+    last=\$(tail -n 1 \${PROGRESS_FILE})
+
+    if [[ "\${last}" != *"Assembly computation succeeded at"* ]]; then
+        echo "---> Assembly not finished. Resuming due to unresolvable condition."
+        echo "---> Resuming(\$N) $PROJECT_NAME.$DATESTAMP ..."
+        startNEWBLER
+    else
+        break
+    fi
+done
+
+ENDBLOCK
+} #}}}
+
+function cmd_file_POST() { #{{{
+cat >> $CMD_FILE  << ENDBLOCK
+DATE_COMPLETED=\$(date +%Y-%m-%d\ %H:%M:%S)
+
+# log completion date to log file
+echo
+echo "$APP_DESCRIPTION run has completed at \$DATE_COMPLETED." >> \$LOG_FILE
+
+ENDBLOCK
+} #}}}
+
+function cmd_file_POST_AT() { #{{{
+cat >> $CMD_FILE  << ENDBLOCK
+# email user notification of CMD completion
+#email_user
+ENDBLOCK
+} #}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Submit Job Functions ~~~~~
+function submit_job() { #{{{
+    echo "Submitting the $APP_DESCRIPTION job to be performed in the near future: "
+    echo "Submitting '$JOB_SUBMITTER' job..."
+    if [[ "$JOB_SUBMITTER" == 'at' ]]; then
+        at -v -t $DATESTAMP_EXEC -f $CMD_FILE
+        JOB_Q_CMD="atq"
+    elif [[ "$JOB_SUBMITTER" == 'qsub' ]]; then
+        echo -n "The qsub job process ID is:  "
+        qsub $CMD_FILE
+        JOB_Q_CMD="qstat -u \$USER"
+    fi
+    echo "Use '$JOB_Q_CMD' to see the list of jobs setup to run."
+} #}}}
+
+#~~~~~~~~~~~~ Util Functions ( grabbed from cometsong_util_functions.sh ) ~~~{{{
+# printf each var name and value
+#   call as:  debug_print_vars "VARNAME"
+#   or:       debug_print_vars ${VARNAMES[@]}
+#   default width of longest varname is 25
+function debug_print_vars() { #{{{
+    # set prefix
+    local PREFIX='  '
+    #set longest for printf spacing
+    local LONGEST=20
+
+    if [[ -n $DEBUG ]] ; then
+        echo "${PREFIX}----- Settings of Variables -----"
+        for V in $@; do
+            printf "${PREFIX}%${LONGEST}s = %s\n" "$V" "${!V}"
+        done;
+        echo "${PREFIX}---------------------------------"
+    fi
+} #}}}
+
+#}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Exec Vars ~~~~~
+#{{{
+# Init datestamp variables that are not run-specific
+# exec job later with 'at'
+DATESTAMP_EXEC=$(date --date='5 minutes' +%Y%m%d%H%M)
+
+# set up result output and log locations
+BASE_FILE_NAME="$PROJECT_NAME.$DATESTAMP.$JOB_SUBMITTER-job"
+LOG_FILE_NAME="${BASE_FILE_NAME}.log"
+CMD_FILE="${BASE_FILE_NAME}.cmd.sh"
+
+OUTPUT_DIR="\${BASE_DIR}/${APP_OUTDIR}"
+LOG_DIR=${LOG_DIR:-"\${OUTPUT_DIR}/logs"}
+LOG_FILE="\${LOG_DIR}/${LOG_FILE_NAME}"
+#}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ App Func Exec ~~~~~
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Script Exec ~~~~~
+create_cmd_file
+debug_print_vars ${SCRIPT_VARS[@]}
+submit_job
+echo
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ modeline! ~~~~~ #{{{
+# vim: ft=sh fdm=marker:
+#}}}
