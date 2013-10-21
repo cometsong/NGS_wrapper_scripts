@@ -1,0 +1,45 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                          #
+#     These settings are for the Mira assembly setup.      #
+#                                                          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#   1) Edit only the section after '=' symbol.             #
+#   2) Surround the values with quotes: FOO="bar"          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#~~~~~~~~~~~~ Email and Usergroup from uni-muenster.de ~~~~~
+USER_EMAIL="bleopold@uni-muenster.de"
+USER_GROUP="e0paro"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queue Name ~~~~~
+# Possible queue names are:  
+#   on Palma(HPC): default, long, mescashort, mescalong
+#   on Okazaki:    default, long
+QUEUE="long"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Project Job Details ~~~~~
+# The name of the JOB's project you are running (default: 'MyProject'):
+PROJECT_NAME="Mira_TEMPLATE_001"
+
+# Base Dir (all following files start from here)
+BASE_DIR="$HOME/hygiene/template_mira_assembly_folder"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MIRA Parameters ~~~~~
+# The name of the file that holds details on the job, 
+# including the data files, the project name and any parameters
+MANIFEST_FILE="TEMPLATE_Mira.manifest"
+## Other Manifest files can be used, in same dir as first (ensure that: +=" filename" is used here!)
+# MANIFEST_FILE+=" other_manifest_file_in_same_PROJECT_DIR.txt"
+
+# Dir for output files: (default Project_Name-results)
+OUTDIR="$PROJECT_NAME"
+
+# additional parameter files to append to the above manifest file settings:
+#MIRA_PARAM_DIR="~/hygiene/mira_config"
+
+MIRA_PARAM_MANIFEST[1]="Common_Settings.manifest"
+MIRA_PARAM_MANIFEST[2]="Output_Settings.manifest"
+MIRA_PARAM_MANIFEST[3]="IonTor_Settings.manifest"
+#MIRA_PARAM_MANIFEST[4]="Solexa_Settings.manifest"
+
+

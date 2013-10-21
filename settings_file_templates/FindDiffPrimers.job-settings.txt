@@ -1,0 +1,108 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                          #
+# These settings are for 'Find_Differential_Primers' setup #
+#                                                          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#   1) Edit only the section after '=' symbol.             #
+#   2) Surround the values with quotes: FOO="bar"          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#~~~~~~~~~~~~ Email and Usergroup from uni-muenster.de ~~~~~
+USER_EMAIL="bleopold@uni-muenster.de"
+USER_GROUP="e0paro"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queue Name ~~~~~
+# Possible queue names are:  
+#    on Palma(HPC): default, long, mescashort, mescalong
+#    on Okazaki:    default, long
+QUEUE="default"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Project Job Details ~~~~~
+# The name of the JOB's project you are running
+PROJECT_NAME="fdp_e.coli_01"
+
+# Base Dir (all following files start from here)
+BASE_DIR="/data/code/differential_primers/mellman_ecoli"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ App-Specific Vars ~~~~~
+# Sequence Configuration file:
+CONFIGFILE="sample_sequences/UKM_O104_primers_01.conf"
+
+# Dir for output files: (default 'Project_Name-results')
+OUT_DIR=""
+
+# keep the app's internal log files? (default 'false')
+KEEP_LOGS="false"
+
+# Dir for log files: (default 'OUT_DIR/logs')
+LOG_DIR=""
+
+# miscellaneous find_differential_primers options (possible options shown below)
+# e.g.:  DIFFPRIMER_OPTIONS="--nocds --numreturn=10 --commonfamilyprimers --clean"
+DIFFPRIMER_OPTIONS=""
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# Possible Find_Differential_Primers Options:
+# --nocds               do not restrict primer prediction to CDS
+# --noprodigal          do not carry out Prodigal prediction step
+# --noprimer3           do not carry out ePrimer3 prediction step
+# --noprimersearch      do not carry out PrimerSearch step
+# --noclassify          do not carry out primer classification step
+# --commonfamilyprimers find primers common to each family group
+# --single_product=SINGLE_PRODUCT
+#                       location of FASTA sequence file containing sequences
+#                       from which a sequence-specific primer must amplify
+#                       exactly one product.
+# --filtergc3prime      allow no more than two GC at the 3` end of primers
+# --prodigal=PRODIGAL_EXE
+#                       location of Prodigal executable
+# --eprimer3=EPRIMER3_EXE
+#                       location of EMBOSS eprimer3 executable
+# --numreturn=NUMRETURN
+#                       number of primers to find
+# --osize=OSIZE         optimal size for primer oligo
+# --minsize=MINSIZE     minimum size for primer oligo
+# --maxsize=MAXSIZE     maximum size for primer oligo
+# --otm=OTM             optimal melting temperature for primer oligo
+# --mintm=MINTM         minimum melting temperature for primer oligo
+# --maxtm=MAXTM         maximum melting temperature for primer oligo
+# --ogcpercent=OGCPERCENT
+#                       optimal %GC for primer oligo
+# --mingc=MINGC         minimum %GC for primer oligo
+# --maxgc=MAXGC         maximum %GC for primer oligo
+# --psizeopt=PSIZEOPT   optimal size for amplified region
+# --psizemin=PSIZEMIN   minimum size for amplified region
+# --psizemax=PSIZEMAX   maximum size for amplified region
+# --maxpolyx=MAXPOLYX   maximum run of repeated nucleotides in primer
+# --mismatchpercent=MISMATCHPERCENT
+#                       allowed percentage mismatch in primersearch
+# --hybridprobe         generate internal oligo as a hybridisation probe
+# --oligoosize=OLIGOOSIZE
+#                       optimal size for internal oligo
+# --oligominsize=OLIGOMINSIZE
+#                       minimum size for internal oligo
+# --oligomaxsize=OLIGOMAXSIZE
+#                       maximum size for internal oligo
+# --oligootm=OLIGOOTM   optimal melting temperature for internal oligo
+# --oligomintm=OLIGOMINTM
+#                       minimum melting temperature for internal oligo
+# --oligomaxtm=OLIGOMAXTM
+#                       maximum melting temperature for internal oligo
+# --oligoogcpercent=OLIGOOGCPERCENT
+#                       optimal %GC for internal oligo
+# --oligomingc=OLIGOMINGC
+#                       minimum %GC for internal oligo
+# --oligomaxgc=OLIGOMAXGC
+#                       maximum %GC for internal oligo
+# --oligomaxpolyx=OLIGOMAXPOLYX
+#                       maximum run of repeated nt in internal oligo
+# --clean               clean up old output files before running
+# --cleanonly           clean up old output files and exit
+# --blast_exe=BLAST_EXE
+#                       location of BLASTN/BLASTALL executable
+# --blastdb=BLASTDB     location of BLAST database
+# --useblast            use existing BLAST results
+# --keep_logs           store log files from each process
+# --log_dir=LOG_DIR     store kept log files in this directory
+

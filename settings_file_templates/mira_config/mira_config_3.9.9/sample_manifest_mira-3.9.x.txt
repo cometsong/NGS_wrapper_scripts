@@ -1,0 +1,10 @@
+# sample manifest file (from docs)
+project = MyFirstAssembly
+job = genome,denovo,accurate
+parameters = -GE:not=4 \
+    -MI:sonfs=no
+
+readgroup = SomeUnpaired454ReadsIGotFromTheLab
+data = TCMFS456ZH345.fastq TQF92GT7H34.fastq
+technology = 454
+

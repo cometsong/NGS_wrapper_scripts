@@ -1,0 +1,51 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                          #
+#     These settings are for the Mira assembly setup.      #
+#                                                          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#   1) Edit only the section after '=' symbol.             #
+#   2) Surround the values with quotes: FOO="bar"          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#~~~~~~~~~~~~ Email and Usergroup from uni-muenster.de ~~~~~
+USER_EMAIL="bleopold@uni-muenster.de"
+USER_GROUP="e0paro"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queue Name ~~~~~
+# Possible queue names are:  
+#   on Palma(HPC): default, long, mescashort, mescalong
+#   on Okazaki:    default, long
+QUEUE="default"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Project Job Details ~~~~~
+# The name of the JOB's project you are running
+PROJECT_NAME="Mira_TEMPLATE_001"
+
+# Base Dir (all following files start from here)
+BASE_DIR="$HOME/hygiene/template_mira_assembly_folder"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~ File of Fastq File Names ~~~~~
+# The name of the file that holds the NAMES of the FASTQ 
+# files that will be included in the assembly must have an 
+# extension = "fofn' 
+# e.g. YOUR_PROJECT_in.fofn  (fofn = "file-of-file-names")
+# *** Inside this file you create, you will need to list each sequence filename, one filename per line.  *** 
+FILE_OF_FILE_NAMES="TEMPLATE_001.fofn"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Parameter Filename ~~~~~
+# The name of the Mira parameters file.  
+# This will vary based on the sequencer that was used.
+# Possible file names are (only one of these may be used!):
+#   MIRA_Parameters_IonTorrent.txt
+#   MIRA_Parameters_Illumina.txt
+#   MIRA_Parameters_454.txt
+
+MIRA_PARAM_FILE="MIRA_Parameters_Illumina.txt"
+
+#Uncomment this variable if you want to change it, to use one of your own parameter files.
+#MIRA_PARAM_DIR="~/hygiene/mira_config"
+
+############################################################
+# Don't TOUCH this one!!
+MIRA_VER="3.4"
+############################################################

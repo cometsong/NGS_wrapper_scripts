@@ -1,0 +1,11 @@
+#################################################################################################
+#
+# this file is used to map illumina data using the 454 .caf data as backbone
+#
+#################################################################################################
+
+--project=hybrid --job=mapping,genome,accurate,solexa
+-AS:nop=1
+-SB:bft=caf
+<&log_assembly.txt
+

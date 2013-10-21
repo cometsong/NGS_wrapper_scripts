@@ -1,0 +1,14 @@
+# manifest file
+
+project = template_project
+job = genome,denovo,accurate
+
+parameters = \
+    COMMON_SETTINGS \
+        -MI:somrnl=0
+
+readgroup = sionStuff
+technology = iontor
+strainname = myStrain
+data = my_seq_folder/*.fastq.gz
+

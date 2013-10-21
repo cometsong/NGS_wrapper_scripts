@@ -1,0 +1,14 @@
+# Parameters manifest file for mira 3.9.9
+parameters = \
+    COMMON_SETTINGS \
+        -OUTPUT:output_result_fasta=yes \
+        -OUTPUT:output_result_ace=yes \
+        \
+        -OUTPUT:output_result_tcs=no \
+        -OUTPUT:output_result_caf=no \
+        -OUTPUT:output_result_maf=no \
+        -OUTPUT:output_tmpresult_fasta=no \
+        -OUTPUT:output_tmpresult_ace=no \
+        -OUTPUT:output_exttmpresult_fasta=no \
+        -OUTPUT:output_exttmpresult_ace=no \
+        -OUTPUT:remove_rollover_tmps=yes \

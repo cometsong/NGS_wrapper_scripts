@@ -1,0 +1,84 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                          #
+#       These settings are for 'SPAdes Assembler setup     #
+#                                                          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#   1) Edit only the section after '=' symbol.             #
+#   2) Surround the values with quotes: FOO="bar"          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#~~~~~~~~~~~~ Email and Usergroup from uni-muenster.de ~~~~~
+USER_EMAIL="bleopold@uni-muenster.de"
+USER_GROUP="e0paro"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queue Name ~~~~~
+# Possible queue names are:  
+#    on Palma(HPC): default, long, mescashort, mescalong
+#    on Okazaki:    default, long
+QUEUE="default"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Project Job Details ~~~~~
+# The name of the JOB's project you are running
+PROJECT_NAME="SPAdes_Illumina01"
+
+# Base Dir (all following files start from here)
+BASE_DIR="/data/code/spades"
+
+# SEQ_FILE must include a leading flag for the TYPE of seqfile (paired, single, etc) as shown below in option list
+SEQ_FILE="--12 data-sebastian/sakai_mis-both_0.64percent.fastq"
+
+# Comma-separated list of k-mer sizes (must be odd and less than 128) [default: 21,33,55]
+KMERS="21,33,55,77,99,127"
+
+# other parameters for SPAdes
+OTHER_PARAMS="--careful"
+
+# Maximum amount of memory to use (will be set to match the qsub limits on Okazaki)
+# RAM limit for SPAdes in Gb (terminates if exceeded) [default: 250]
+MEM_GBS=""
+
+# Dir for output files: (default "$PROJECT_NAME_k$KMERS")
+OUTDIR=""
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Options for SPAdes genome assembler v.2.5.0
+# 
+# Usage: spades.py [options] -o <output_dir>
+# 
+# Basic options:
+# --sc			this flag is required for MDA (single-cell) data
+# --12	<filename>	file with interlaced forward and reverse paired-end reads
+# -1	<filename>	file with forward paired-end reads
+# -2	<filename>	file with reverse paired-end reads
+# -s	<filename>	file with unpaired reads
+# --pe<#>-12	<filename>	file with interlaced reads for paired-end library number <#> (<#> = 1,2,3,4,5)
+# --pe<#>-1	<filename>	file with forward reads for paired-end library number <#> (<#> = 1,2,3,4,5)
+# --pe<#>-2	<filename>	file with reverse reads for paired-end library number <#> (<#> = 1,2,3,4,5)
+# --pe<#>-s	<filename>	file with unpaired reads for paired-end library number <#> (<#> = 1,2,3,4,5)
+# --pe<#>-<or>	orientation of reads for paired-end library number <#> (<#> = 1,2,3,4,5; <or> = fr, rf, ff)
+# --mp<#>-12	<filename>	file with interlaced reads for mate-pair library number <#> (<#> = 1,2,3,4,5)
+# --mp<#>-1	<filename>	file with forward reads for mate-pair library number <#> (<#> = 1,2,3,4,5)
+# --mp<#>-2	<filename>	file with reverse reads for mate-pair library number <#> (<#> = 1,2,3,4,5)
+# --mp<#>-s	<filename>	file with unpaired reads for mate-pair library number <#> (<#> = 1,2,3,4,5)
+# --mp<#>-<or>	orientation of reads for mate-pair library number <#> (<#> = 1,2,3,4,5; <or> = fr, rf, ff)
+# --test			runs SPAdes on toy dataset
+# -h/--help		prints this usage message
+# 
+# Pipeline options:
+# --only-error-correction	runs only read error correction (without assembling)
+# --only-assembler	runs only assembling (without read error correction)
+# --disable-gzip-output	forces error correction not to compress the corrected reads
+# --careful		tries to reduce number of mismatches and short indels
+# --rectangles		uses rectangle graph algorithm for repeat resolution
+# 
+# Advanced options:
+# --dataset	<filename>	file with dataset description in YAML format
+# -t/--threads	<int>		number of threads [default: 16]
+# -m/--memory	<int>		RAM limit for SPAdes in Gb (terminates if exceeded) [default: 250]
+# --tmp-dir	<dirname>	directory for read error correction temporary files [default: <output_dir>/corrected/tmp]
+# -k <int,int,...>	comma-separated list of k-mer sizes (must be odd and less than 128) [default: 21,33,55]
+# -i/--iterations	<int>		number of iterations for read error correction [default: 1]
+# --phred-offset	<33 or 64>	PHRED quality offset in the input reads (33 or 64) [default: auto-detect]
+# --debug				runs SPAdes in debug mode (keeps intermediate output)
+

@@ -1,0 +1,5 @@
+parameters = \
+    454_SETTINGS \
+        -ASSEMBLY:enforce_presence_of_qualities=no \
+        -CONTIG:force_nonIUPACconsensus_perseqtype=yes
+

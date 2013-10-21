@@ -1,0 +1,5 @@
+# Parameters manifest file for mira 3.9.9
+parameters = \
+    IONTOR_SETTINGS \
+        -ASSEMBLY:minimum_reads_per_contig=10
+

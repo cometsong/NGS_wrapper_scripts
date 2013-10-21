@@ -1,0 +1,104 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                          #
+#        These settings are for the 'Mugsy' setup.         #
+#                                                          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#   1) Edit only the section after '=' symbol.             #
+#   2) Make sure "quotes" surround each value you enter!   #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#~~~~~~~~~~~~ Email and Usergroup from uni-muenster.de ~~~~~
+USER_EMAIL="bleopold@uni-muenster.de"
+USER_GROUP="e0paro"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queue Name ~~~~~
+# Possible queue names are:  
+#    on Palma(HPC): default, long, mescashort, mescalong
+#    on Okazaki:    default, long
+QUEUE="default"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Project Job Details ~~~~~
+# The name of the JOB's project you are running (default: 'MyProject'):
+PROJECT_NAME='MyFirstMugsyProject'
+
+# Base Dir (all following files start from here)
+BASE_DIR="$HOME/app-name/app_tests"
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ App-Specific Vars ~~~~~
+# list of input sequence file names:
+#   Input is one or more (multi)FASTA files, one per genome. Each file should contain all the sequences for a single
+#   organism/species. The filename is used as the genome name.
+#
+#   Limitations on FASTA input:
+#       input FASTA headers must not contain ':' or '-'
+#       ambiguity characters are converted to N in output
+# SEQ_FILE_INFO[1] filename is Required!!
+SEQ_FILE[1]=""
+#SEQ_FILE[2]=""
+#...etc...
+
+# Dir for resulting output and log files
+#   (default Base_Dir/Project_Name_results_datestamp)
+OUT_DIR=""
+
+#   (default Out_Dir/logs)
+LOG_DIR=""
+
+# prefix for outfiles (default "m_"
+OUTFILE_PREFIX=""
+
+DEBUG="-debug"
+
+# detect and report duplications? (1 or 0, default 0)
+DUPLICATIONS="0"
+
+OTHER_PARAMS=""
+# e.g.  OTHER_PARAMS="--distance 1111 -plot"
+
+# Other Options:
+#   -d│--distance
+#       Maximum distance along a single sequence (bp) for
+#       chaining anchors into locally colinear blocks (LCBs).  This is
+#       used by the segmentation step synchain-mugsy. Default is 1000bp.
+#
+#   -c│--minlength 
+#       Minimum span of an aligned region in a colinear
+#       block (bp). This is used by the segmentation step
+#       synchain-mugsy. Default is 30bp.
+#
+#   -duplications
+#       1 - Detect and report duplications. 
+#       0 - Skip. Default is 0.
+#
+#   -nucmeropts 
+#       Options passed through to the Nucmer package. 
+#       Eg. -nucmeropts "-l 15" sets the minimum MUM length in
+#       NUCmer to 15. See the Nucmer documentation at
+#       http://mummer.sf.net for more information.  Default is -l 15.
+#
+#   -allownestedlcbs
+#       Default=false. Places each multi-genome anchor
+#       in exactly one LCB; the longest spanning LCB
+#
+#   -plot 
+#       output genome dot plots in GNUplot format. Overlays LCBS
+#       onto pairwise plots from mummerplot. Display of draft genomes in
+#       these plots is not supported.
+#
+#   -fullsearch 
+#       Run a complete all pairs Nucmer search with each
+#       sequence as a reference and query (n^2-1 total searches). Default
+#       is one direction only (n^2-1/2 searches).
+#
+#   -refine run an second iteration of Mugsy on each LCB to refine the
+#       alignment using either Mugsy (--refine mugsy), FSA (--refine
+#       fsa), Pecan (--refine pecan), MLAGAN (--refine mlagan). Requires
+#       necessary tools are in your path:
+#           fsa: fsa
+#           pecan: muscle,exonerate, in the path. classpath set for bp.pecan.Pecan.
+#           mlagan: mlagan.sh
+#
+#   -debug           debug level. > 2 verbose
+
+

@@ -1,0 +1,52 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                          #
+#    These settings are for the Velvet assembly setup.     #
+#                                                          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#   1) Edit only the section after '=' symbol.             #
+#   2) Surround the values with quotes: FOO="bar"          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#~~~~~~~~~~~~ Email and Usergroup from uni-muenster.de ~~~~~
+USER_EMAIL="bleopold@uni-muenster.de"
+USER_GROUP="e0paro"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queue Name ~~~~~
+# Possible queue names are:  
+#    on Palma(HPC): default, long, mescashort, mescalong
+#    on Okazaki:    default, long
+QUEUE="default"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Project Job Details ~~~~~
+# The name of the JOB's project you are running
+PROJECT_NAME="Mira_TEMPLATE_001"
+
+# Base Dir (all following files start from here)
+BASE_DIR="$HOME/hygiene/template_mira_assembly_folder"
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~ VelvetOptimizer Parameters ~~~~~
+# The script will check several 'hash' values with the velveth 
+# program and will as many processes as THREADS allows.
+# NOTE: maximum HASH_END is '63'
+#     : max Threads is 32 (highest num of processors on a cluster machine)
+HASH_START="37"
+HASH_END="43"
+THREADS="8"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ velveth Parameters ~~~~~
+# syntax: "-filetype -readtype -filepath"
+SEQ_FILE_INFO[1]="-fastq -shortPaired $BASE_DIR/E.coli-O26/E.coli-O26-3184_00.fastq"
+#SEQ_FILE_INFO[2]="-fastq -longPaired sequences.fastq"
+# SEQ_FILE_INFO[3]="... as many as you need ..."
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ velvetg Parameters ~~~~~
+# NOTE: ins_length = read length
+velvetg_OPTIONS="-ins_length 300 -exp_cov auto"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Create an ACE file ~~~~~
+# set to empty string to turn off AMOS output and ACE conversion
+CREATE_ACE='yes'
+# CREATE_ACE=''
+
+

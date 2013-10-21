@@ -1,0 +1,26 @@
+
+--job=denovo,genome,accurate,454
+COMMON_SETTINGS  
+    -GENERAL:number_of_threads=8
+    -notraceinfo
+
+# OUTPUT:
+-OUTPUT:output_result_fasta=yes
+-OUTPUT:output_tmpresult_fasta=no
+-OUTPUT:output_exttmpresult_fasta=no
+
+-OUTPUT:output_result_ace=yes
+-OUTPUT:output_tmpresult_ace=no
+-OUTPUT:output_exttmpresult_ace=no
+
+-OUTPUT:output_result_tcs=no
+-OUTPUT:output_result_caf=no
+-OUTPUT:output_result_maf=no
+
+-OUTPUT:remove_rollover_tmps=yes
+
+SOLEXA_SETTINGS
+    -LOADREADS:ft=FOFNEXP
+    -ASSEMBLY:epoq=no
+    -CONTIG:force_nonIUPACconsensus_perseqtype=yes
+

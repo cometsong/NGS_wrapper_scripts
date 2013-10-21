@@ -1,0 +1,41 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                          #
+#   These settings are for the 'NEWBLER' assembly setup.   #
+#                                                          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#   1) Edit only the section after '=' symbol.             #
+#   2) Make sure "quotes" surround each value you enter!   #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#~~~~~~~~~~~~ Email and Usergroup from uni-muenster.de ~~~~~
+USER_EMAIL="bleopold@uni-muenster.de"
+USER_GROUP="e0paro"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queue Name ~~~~~
+# Possible queue names are:  
+#    on Palma(HPC): default, long, mescashort, mescalong
+#    on Okazaki:    default, long
+QUEUE="default"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Project Job Details ~~~~~
+# The name of the JOB's project you are running
+PROJECT_NAME="Assembly_TEST_001"
+
+# Base Dir (all following files start from here)
+BASE_DIR="/data/code/newbler/assembly_tests"
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~ NEWBLER specific options ~~~~~
+# list of input sequence file names, separated with commas or spaces
+NEWBLER_INPUT_FILES="file1.fastq"
+
+# Dir for resulting output and log files
+#   (default Base_Dir/Project_Name_results)
+NEWBLER_OUTPUT_DIR=""
+
+# possible 'TECH' options: MIS_PE, PGM
+NEWBLER_TECH="PGM"
+
+# IF tech is MIS_PE, then uncomment this if you want to convert to the 'Old' version for newbler
+#CONVERT_PE_NEW2OLD_FORMAT="convert"
+

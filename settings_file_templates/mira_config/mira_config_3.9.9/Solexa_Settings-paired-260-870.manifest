@@ -1,0 +1,5 @@
+parameters= \
+    SOLEXA_SETTINGS \
+        -GENERAL:tismin=260:tismax=870 \
+        -ASSEMBLY:enforce_presence_of_qualities=no \
+        -CONTIG:force_nonIUPACconsensus_perseqtype=yes

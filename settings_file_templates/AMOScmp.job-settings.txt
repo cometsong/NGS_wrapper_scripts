@@ -1,0 +1,42 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                          #
+#        These settings are for 'AMOScmp' setup            #
+#                                                          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#   1) Edit only the section after '=' symbol.             #
+#   2) Surround the values with quotes: FOO="bar"          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#~~~~~~~~~~~~ Email and Usergroup from uni-muenster.de ~~~~~
+USER_EMAIL="bleopold@uni-muenster.de"
+USER_GROUP="e0paro"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queue Name ~~~~~
+# Possible queue names are:  
+#    on Palma(HPC): default, long, mescashort, mescalong
+#    on Okazaki:    default, long
+QUEUE="default"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Project Job Details ~~~~~
+# The name of the JOB's project you are running
+PROJECT_NAME="MyProjectName"
+
+# BASE_DIR must start with / 
+BASE_DIR="/data/code/amos/"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ AMOScmp Parameters ~~~~~
+# FASTQ file or files (only ONE run at a time!)
+FASTQ_FILES="outbreak_FASTQs/*.fastq"
+
+# default of this var = $PROJECT_NAME
+OUTPUT_FILENAME_PREFIX="EHEC_cmp_55989"
+
+# TARGET_AMOS  - Filename desired for the genome reads to map (in AMOS message format)
+#   default is OUTPUT_FILENAME_PREFIX.afg
+TARGET_AMOS="Outbreak_Darmstadt_runs.afg"
+
+# REFSEQFASTA - The reference genome sequence in FASTA format
+REFSEQ_FASTA="E.coli-55989-NC_011748.fasta"
+
+CONVERT_AMOS_ACE="yes"
+
