@@ -1,0 +1,54 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                                          #
+#   These settings are for the 'TEMPLATE_APP' setup.       #
+#                                                          #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#   1) Edit only the section after '=' symbol.             #
+#   2) Make sure "quotes" surround each value you enter!   #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+#~~~~~~~~~~~~ Email and Usergroup from uni-muenster.de ~~~~~
+USER_EMAIL="bleopold@uni-muenster.de"
+USER_GROUP="e0paro"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Queue Name ~~~~~
+# Possible queue names are:  
+#    on Palma(HPC): default, long, mescashort, mescalong
+#    on Okazaki:    default, long
+QUEUE="default"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Project Job Details ~~~~~
+# The name of the JOB's project you are running (default: 'MyProject'):
+PROJECT_NAME="Test_001_TEMPLATE_APP"
+
+# Base Dir (all following files start from here)
+BASE_DIR="$HOME/app-name/app_tests"
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ App-Specific Vars ~~~~~
+# list of input sequence file names, separated with commas or spaces
+INPUT_FILES="file1.fastq file2.beautiful"
+
+# Dir for resulting output and log files
+#   (default Base_Dir/Project_Name_results_datestamp)
+OUT_DIR=""
+
+#   (default Out_Dir/logs)
+LOG_DIR=""
+
+# Dir to use for temporary files
+#   (default Out_Dir/tmp)
+TMP_DIR=""
+
+# Other cool variables for TEMPLATE_APP
+OTHER_PARAMS="-foo=bar"
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# CHANGE THESE **ONLY** IF YOU KNOW WHAT YOU ARE DOING!!!!!!
+# JOB_SUBMITTER='at|qsub'
+# TEMPLATE_APP_VERSION="1.5"
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
