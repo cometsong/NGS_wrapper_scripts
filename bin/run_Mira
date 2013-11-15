@@ -1,0 +1,415 @@
+#!/usr/bin/env bash
+
+#============================================================================{{{
+#          FILE:  run_Mira_Assembler
+#
+#         USAGE:  script_name settings_filename
+#   DESCRIPTION:  Creates and submits a job to 'qsub' or 'at' for the specific app.
+#  REQUIREMENTS:  at, qsub, The App
+#
+#        AUTHOR:  B. Leopold (cometsong), bleopoldNOSPAM@uni-muenster.de
+#       COMPANY:  Universitaetsklinik Muenster
+#       CREATED:  2012-04-13 12:43:22+0200
+#       REVISED:  2012-08-14 14:24:57+0100 v1.6 added util function, refactored for template
+#       REVISED:  2013-06-11 11:15:59+0200 v1.9 combined 'at' and 'qsub' versions into single script
+#                                               for easier updates with new apps in the future.
+#       REVISED:  2013-07-24 09:53:08+0200 v2.0 installed torque on single server with 'at'. Setup
+#                                               to use hostname as well as 'at|qsub'
+#       REVISED:  2013-08-20 11:14:24+0200 v2.0b added version check for MIRA on diff servers
+#       REVISED:  2013-09-17 13:49:41+0200 v2.1 mod several functions
+#       REVISED:  2013-09-24 09:31:16+0200 v2.2 moved queue_details to separate file for DRY
+#      REVISION:  2.2
+#===============================================================================
+
+# set -o nounset          # Treat unset variables as an error
+# set -o errexit          # Abort script at first error, when a command exits with non-zero status (except in until or while loops, if-tests, list constructs)
+# set -o xtrace           # Print each command (expanded) to stdout before executing it (good for debugging)
+#}}}
+
+# ---------------------------------------------------------------------------- #
+#                               Usage & Info                                {{{#
+# ---------------------------------------------------------------------------- #
+SCRIPT_NAME=$(basename $0)
+SCRIPT_DIR=$(dirname $0)
+USAGE_MSG="  This script will create and submit a $APP_DESCRIPTION job
+  using specific variables from the file you have edited.
+
+      Usage:  $SCRIPT_NAME  settings_filename"
+
+function usage() {
+    echo
+    echo "$USAGE_MSG"
+    exit
+}
+#}}}
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Source Variables ~~~{{{
+# Get settings from the user's file (passed as first argument on cmd line)
+#SETTINGS_FILENAME=${1:?$USAGE_MSG}  # gives error message showing line of script.
+SETTINGS_FILENAME=${1:-''}
+
+echo -n "Running $SCRIPT_NAME... "
+if [ -n "$SETTINGS_FILENAME" ]; then
+    source $SETTINGS_FILENAME
+    echo " with $SETTINGS_FILENAME"
+else
+    usage
+fi
+ #}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  Check Variables - Set defaults, errors ~~~{{{
+DATESTAMP="$(date +%Y%m%d-%H%M%S)"
+PROJECT_NAME=${PROJECT_NAME:-"MyProject"}
+USER_EMAIL=${USER_EMAIL?"Your USER_EMAIL needs to be set for you to get an email when job is complete."}
+BASE_DIR=${BASE_DIR?'The BASE_DIR parameter needs to be set as the base directory that all other dirs come from!'}
+CPUS=${CPUS:-4}
+QUEUE=${QUEUE:-default}
+#}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Check and Set APP Vars ~~~{{{
+# for testing purposes, verbose and debug are default turned on. #{{{
+#VERBOSE=${VERBOSE:-"--verbose"}
+#VERBOSE=${VERBOSE:-""}
+DEBUG=${DEBUG:-"--debug"}
+#DEBUG=${DEBUG:-""}
+#}}}
+
+# List of all app-specific variable names to be listed when job submitted
+APP_VARS=(
+    MIRA_VER
+    MIRA_PARAM_DIR
+    )
+
+if [[ "$MIRA_VER" == "3.9" ]]; then #{{{
+    MANIFEST_FILE=${MANIFEST_FILE:?'The MANIFEST_FILE parameter needs to be set!'}
+    MIRA_PARAM_MANIFEST[1]=${MIRA_PARAM_MANIFEST[1]:?'The MIRA_PARAM_MANIFEST[1] parameter needs to be set!'}
+    APP_VARS+=( MANIFEST_FILE MIRA_PARAM_MANIFEST )
+    #}}}
+elif [[ "$MIRA_VER" == "3.4" ]]; then #{{{
+    MIRA_PARAM_FILE=${MIRA_PARAM_FILE:?'The MIRA_PARAM_FILE parameter needs to be set!'}
+    FILE_OF_FILE_NAMES=${FILE_OF_FILE_NAMES:?'The FILE_OF_FILE_NAMES parameter needs to be set!'}
+    FASTQ_FINAL=${PROJECT_NAME}_concat.fastq
+    APP_VARS+=( MIRA_PARAM_FILE FILE_OF_FILE_NAMES FASTQ_FINAL )
+    #}}}
+fi
+
+#-----------------------------------------------------#
+
+# Default OUTDIR setting
+APP_OUTDIR="${PROJECT_NAME}_assembly"
+
+#}}}
+
+# ---------------------------------------------------------------------------- #
+#                              Basic CMD Info                               {{{#
+# ---------------------------------------------------------------------------- #
+
+# HOST Name setting:
+HOST=$(uname -n)
+
+# This must be set when installing this script on the server: Cluster or Local?
+# => JOB_SUBMITTER=(qsub|at)
+JOB_SUBMITTER=${JOB_SUBMITTER:-'qsub'}
+
+MIRA_VER=${MIRA_VER:-"3.9"}
+# actual path of CMD binaries for the different server types, two diff installed versions:
+if [[ "$HOST" == 'NGS-Anal' || "$JOB_SUBMITTER" == 'at' ]]; then #{{{
+    if [[ "$MIRA_VER" == "3.9" ]]; then #{{{
+        BIN_BASE="/usr/local/mira/mira-3.9.9/bin"
+        MIRA_PARAM_DIR=${MIRA_PARAM_DIR:-"/usr/local/mira_config/mira_config_3.9.9"}
+        #}}}
+    elif [[ "$MIRA_VER" == "3.4" ]]; then #{{{
+        BIN_BASE="/usr/local/mira/mira-3.4.0/bin/"
+        MIRA_PARAM_DIR=${MIRA_PARAM_DIR:-"/usr/local/mira_config/mira_config_3.4.1"}
+        #}}}
+    fi
+    #}}}
+elif [[ "$HOST" == 'palma001' ]]; then #{{{
+    if [[ "$MIRA_VER" == "3.9" ]]; then #{{{
+        BIN_BASE="/Applic.PALMA/mira/mira_3.9.9_linux-gnu_x86_64_static/bin"
+        MIRA_PARAM_DIR=${MIRA_PARAM_DIR:-"~/hygiene/mira_config_3.9.9"}
+        #}}}
+    elif   [[ "$MIRA_VER" == "3.4" ]]; then #{{{
+        BIN_BASE="/Applic.PALMA/mira/intel/3.4.0/bin"
+        MIRA_PARAM_DIR=${MIRA_PARAM_DIR:-"~/hygiene/mira_config_3.4.1"}
+        #}}}
+    fi
+    #}}}
+else # some unknown hostname #{{{
+    BIN_BASE="."
+fi #}}}
+
+APP_CMD="${BIN_BASE}/mira"
+APP_DESCRIPTION="mira sequence assembly"
+#}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ APP Functions ~~~~~
+create_mira34_tmp_dir () { #{{{
+    if [ -z "${TMP_PATH}" ]; then
+        if   [[ "$HOST" == 'palma001' ]] ; then TMP_PATH=/scratch/tmp; 
+        elif [[ "$HOST" == 'NGS-Anal' ]] ; then TMP_PATH=${HOME}/tmp; 
+        else                                    TMP_PATH=${HOME}/tmp; 
+        fi
+    fi
+
+    mkdir -p ${TMP_PATH}
+    if [ $? -ne 0 ]; then exit $err ; fi
+
+    #TMPDIR=$(mktemp -d -p ${TMP_PATH} mira_tmp.XXXXX)
+    #if [ $? -ne 0 ]; then exit $err ; fi
+
+    # echo (return) TMPDIR to caller
+    echo $TMP_PATH
+} #}}}
+
+function concat_cmd_options(){ #{{{
+    OPTIONS=""
+    if [[ "$MIRA_VER" == "3.9" ]]; then
+        OPTIONS[1]="${MANIFEST_FILE}"
+        if [ -n ${#MIRA_PARAM_MANIFEST[@]} ] ; then
+            for MAN in ${MIRA_PARAM_MANIFEST[@]}; do
+                OPTIONS[2]+=" ${MIRA_PARAM_DIR}/${MAN}"
+            done
+        fi
+    elif [[ "$MIRA_VER" == "3.4" ]]; then
+        MIRA_TMP_DIR=$(create_mira34_tmp_dir)
+        OPTIONS[1]="--project=${PROJECT_NAME}"
+        OPTIONS[2]="--params=${MIRA_PARAM_DIR}/${MIRA_PARAM_FILE}"
+        OPTIONS[3]="COMMON_SETTINGS"
+        OPTIONS[4]="-DIR:trt=${MIRA_TMP_DIR}" 
+        #OPTIONS[5]="-OUT:remove_tmp_dir=yes"
+        OPTIONS[6]="--fastq=${FASTQ_FINAL}"
+    fi
+    echo ${OPTIONS[@]}
+} #}}}
+
+# TODO: if FILE_OF_FILE_NAMES >1 file; then concat all together
+function combine_FASTQ_files() { #{{{
+    cat $(<$FILE_OF_FILE_NAMES) > ${FASTQ_FINAL}
+} #}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Script Functions ~~~~~
+# list all script variables for debugging prints #{{{
+SCRIPT_VARS=(
+    DATESTAMP
+    HOST
+    JOB_SUBMITTER
+    PROJECT_NAME
+    USER_EMAIL
+    BASE_DIR
+    OUTPUT_DIR
+    LOG_FILE
+    CMD_FILE
+    VERBOSE
+    DEBUG
+    CPUS
+    )
+
+if [[ "$JOB_SUBMITTER" == "qsub" ]] ; then
+    SCRIPT_VARS+=( QUEUE QUEUE_RESOURCES USER_GROUP )
+fi
+
+# append app-specific vars
+SCRIPT_VARS+=( ${APP_VARS[@]} )
+
+#}}}
+
+function init_qsub_settings() { #{{{
+# Init variables that ARE qsub specific
+    # load all host-specific job and queue info
+    source $SCRIPT_DIR/queue_details.sh
+
+    # check declared QUEUE name and set matching RESOURCES
+    QUEUE_RESOURCES=$(return_queue_info $HOST $QUEUE)
+    USER_GROUP=$(return_queue_info $HOST "user_group")
+
+    # determine CPUS based on processors per node
+    CPUS=$(echo ${QUEUE_RESOURCES} | sed -e "s/.*ppn=\([0-9]*\).*/\1/")
+
+} #}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Create CMD_FILE Functions ~~~~~
+function create_cmd_file() { #{{{
+    # This function writes a file to run CMD,
+    # using the settings from SETTINGS_FILENAME
+    echo "Creating the $APP_DESCRIPTION command script ..."
+
+    rm -f $CMD_FILE >& /dev/null
+    touch $CMD_FILE >& /dev/null
+
+    $(cmd_file_HEADER)
+
+    if [[ "$JOB_SUBMITTER" == 'qsub' ]]; then
+        init_qsub_settings
+        $(cmd_file_QSUB)
+    fi
+
+    $(cmd_file_EXEC)
+    $(cmd_file_POST)
+} #}}}
+
+function cmd_file_HEADER() { #{{{
+cat >> $CMD_FILE  << ENDBLOCK
+#! /usr/bin/env bash
+#### This is a cmd file to submit a job you have specified in a settings file.
+#### ... automatically generated by:  "$SCRIPT_NAME"
+#### ... using your settings file:    "$SETTINGS_FILENAME"
+
+ENDBLOCK
+} #}}}
+
+function cmd_file_QSUB() { #{{{
+
+
+cat >> $CMD_FILE  << ENDBLOCK
+#PBS -N $PROJECT_NAME.$DATESTAMP
+#PBS -o $PROJECT_NAME.$DATESTAMP.job_output.log
+#PBS -A $USER_GROUP
+#PBS -M $USER_EMAIL
+#PBS -W umask=002
+#PBS -m ae
+#PBS -j oe
+#PBS -q $QUEUE
+#PBS -l $QUEUE_RESOURCES
+
+# source base etc files, varying based on OS
+for BRC in bashrc bash.bashrc; do
+    if [  -f /etc/\$BRC ]; then
+        . /etc/\$BRC
+    fi
+done
+unset BRC
+
+ENDBLOCK
+} #}}}
+
+function cmd_file_EXEC() { #{{{
+# group together all command options
+APP_CMD_OPTIONS=$(concat_cmd_options)
+
+cat >> $CMD_FILE  << ENDBLOCK
+BASE_DIR="${BASE_DIR}"
+OUTPUT_DIR="${OUTPUT_DIR}"
+LOG_FILE="${LOG_FILE}"
+
+# make final dirs (output, log)
+mkdir -p \${OUTPUT_DIR}
+
+cd \$BASE_DIR
+ENDBLOCK
+
+if [[ "$MIRA_VER" == '3.9' ]]; then
+    if [[ "$HOST" == 'palma001' ]] ; then $(cmd_file_EXEC_39_palma); fi
+elif [[ "$MIRA_VER" == '3.4' ]]; then
+    # following 'echo' gives error 'command not found: All'
+    #echo "All FASTQ files are now being combined into a single one for Mira 3.4 to work with it."
+    $(combine_FASTQ_files)
+    if [[ "$HOST" == 'palma001' ]] ; then $(cmd_file_EXEC_34_palma); fi
+fi
+
+cat >> $CMD_FILE  << ENDBLOCK
+CMD_STR="$APP_CMD $APP_CMD_OPTIONS"
+echo "Running:  \$CMD_STR" >> \$LOG_FILE 2>&1
+$APP_CMD $APP_CMD_OPTIONS >> \$LOG_FILE 2>&1
+ENDBLOCK
+
+}
+#}}}
+
+function cmd_file_EXEC_34_palma() { #{{{
+cat >> $CMD_FILE  << ENDBLOCK
+# ensure that the Correct module is installed for use of Mira 3.4
+module del mira/gcc/3.9.9
+module add mira/intel/3.4.0
+ENDBLOCK
+} #}}}
+
+function cmd_file_EXEC_39_palma() { #{{{
+cat >> $CMD_FILE  << ENDBLOCK
+# ensure that the Correct module is installed for use of Mira 3.9
+module del mira/intel/3.4.0
+module add mira/gcc/3.9.9
+ENDBLOCK
+} #}}}
+
+function cmd_file_POST() { #{{{
+cat >> $CMD_FILE  << ENDBLOCK
+DATE_COMPLETED=\$(date +%Y-%m-%d\ %H:%M:%S)
+
+# log completion date to log file
+echo >> \$LOG_FILE
+echo "$APP_DESCRIPTION run has completed at \$DATE_COMPLETED." >> \$LOG_FILE
+
+# mv MIRA_TMP_DIR to OUTPUT_DIR (cf: DIR:trt)
+MIRA_TMP_DIR="${MIRA_TMP_DIR}/${PROJECT_NAME}_d_tmp"
+rm \${OUTPUT_DIR}/${PROJECT_NAME}_d_tmp >> \$LOG_FILE
+mv \${MIRA_TMP_DIR} \${OUTPUT_DIR} >> \$LOG_FILE
+
+# mv LOG_FILE to the main OUTPUT_DIR:
+mv \${LOG_FILE} \${OUTPUT_DIR}
+
+ENDBLOCK
+} #}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Submit Job Functions ~~~~~
+function submit_job() { #{{{
+    echo "Submitting the $APP_DESCRIPTION job to be performed in the near future: "
+    echo "Submitting '$JOB_SUBMITTER' job..."
+    if [[ "$JOB_SUBMITTER" == 'at' ]]; then
+        at -v -t $DATESTAMP_EXEC -f $CMD_FILE
+        JOB_Q_CMD="atq"
+    elif [[ "$JOB_SUBMITTER" == 'qsub' ]]; then
+        echo -n "The qsub job process ID is:  "
+        qsub $CMD_FILE
+        JOB_Q_CMD="qstat -u \$USER"
+    fi
+    echo "Use '$JOB_Q_CMD' to see the list of jobs setup to run."
+} #}}}
+
+#~~~~~~~~~~~~ Util Functions ( grabbed from cometsong_util_functions.sh ) ~~~{{{
+# printf each var name and value
+#   call as:  debug_print_vars "VARNAME"
+#   or:       debug_print_vars ${VARNAMES[@]}
+#   default width of longest varname is 25
+function debug_print_vars() { #{{{
+    # set prefix
+    local PREFIX='  '
+    #set longest for printf spacing
+    local LONGEST=20
+
+    if [[ -n $DEBUG ]] ; then
+        echo "${PREFIX}----- Settings of Variables -----"
+        for V in $@; do
+            printf "${PREFIX}%${LONGEST}s = %s\n" "$V" "${!V}"
+        done;
+        echo "${PREFIX}---------------------------------"
+    fi
+} #}}}
+
+#}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Exec Vars ~~~~~
+#{{{
+# Init datestamp variables that are not run-specific
+# exec job later with 'at'
+DATESTAMP_EXEC=$(date --date='5 minutes' +%Y%m%d%H%M)
+
+# set up result output and log locations
+BASE_FILE_NAME="$PROJECT_NAME.$DATESTAMP.$JOB_SUBMITTER-job"
+LOG_FILE="${BASE_FILE_NAME}.log"
+CMD_FILE="${BASE_FILE_NAME}.cmd.sh"
+
+OUTPUT_DIR="${BASE_DIR}/${APP_OUTDIR}"
+#}}}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ App Func Exec ~~~~~
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Script Exec ~~~~~
+create_cmd_file
+touch ${LOG_FILE};
+debug_print_vars ${SCRIPT_VARS[@]} | tee -a $LOG_FILE
+submit_job
+echo
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ modeline! ~~~~~ #{{{
+# vim: ft=sh fdm=marker:
+#}}}
