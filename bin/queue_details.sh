@@ -24,7 +24,7 @@ QUEUE_INFO=( #{{{
     #
     "palma001 user_group ${USER_GROUP:-'e0hy'}"
     "palma001 default    walltime=48:00:00,nodes=2:himem:ppn=12"
-    "palma001 long       walltime=100:00:00,nodes=2:himem:ppn=12"
+    "palma001 long       walltime=160:00:00,nodes=2:himem:ppn=12"
     "palma001 mescashort walltime=160:00:00,nodes=2:ppn=32"
     "palma001 mescalong  walltime=48:00:00,nodes=2:ppn=32"
 ) #}}}
