@@ -1,0 +1,2 @@
+# de-ignore global.gitignore bin folder
+!bin/**
