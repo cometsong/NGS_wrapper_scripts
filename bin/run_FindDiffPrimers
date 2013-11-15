@@ -224,8 +224,8 @@ cat >> $CMD_FILE  << ENDBLOCK
 
 # source base etc files, varying based on OS
 for BRC in bashrc bash.bashrc; do
-    if [  -f /etc/$BRC ]; then
-        . /etc/$BRC
+    if [  -f /etc/\$BRC ]; then
+        . /etc/\$BRC
     fi
 done
 unset BRC
