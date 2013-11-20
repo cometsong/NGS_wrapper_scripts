@@ -88,7 +88,7 @@ elif [[ "$MIRA_VER" == "3.4" ]]; then #{{{
     MIRA_PARAM_FILE=${MIRA_PARAM_FILE:?'The MIRA_PARAM_FILE parameter needs to be set!'}
     FILE_OF_FILE_NAMES=${FILE_OF_FILE_NAMES:?'The FILE_OF_FILE_NAMES parameter needs to be set!'}
     FASTQ_FINAL=${PROJECT_NAME}_concat.fastq
-    APP_VARS+=( MIRA_PARAM_FILE FILE_OF_FILE_NAMES FASTQ_FINAL )
+    APP_VARS+=( MIRA_PARAM_FILE FILE_OF_FILE_NAMES FASTQ_FINAL MIRA_TMP_DIR )
     #}}}
 fi
 
@@ -118,7 +118,7 @@ if [[ "$HOST" == 'NGS-Anal' || "$JOB_SUBMITTER" == 'at' ]]; then #{{{
         MIRA_PARAM_DIR=${MIRA_PARAM_DIR:-"/usr/local/mira_config/mira_config_3.9.9"}
         #}}}
     elif [[ "$MIRA_VER" == "3.4" ]]; then #{{{
-        BIN_BASE="/usr/local/mira/mira-3.4.0/bin/"
+        BIN_BASE="/usr/local/mira/mira-3.4.0/bin"
         MIRA_PARAM_DIR=${MIRA_PARAM_DIR:-"/usr/local/mira_config/mira_config_3.4.1"}
         #}}}
     fi
@@ -171,7 +171,6 @@ function concat_cmd_options(){ #{{{
             done
         fi
     elif [[ "$MIRA_VER" == "3.4" ]]; then
-        MIRA_TMP_DIR=$(create_mira34_tmp_dir)
         OPTIONS[1]="--project=${PROJECT_NAME}"
         OPTIONS[2]="--params=${MIRA_PARAM_DIR}/${MIRA_PARAM_FILE}"
         OPTIONS[3]="COMMON_SETTINGS"
@@ -243,6 +242,7 @@ function create_cmd_file() { #{{{
         $(cmd_file_QSUB)
     fi
 
+    MIRA_TMP_DIR=$(create_mira34_tmp_dir)
     $(cmd_file_EXEC)
     $(cmd_file_POST)
 } #}}}
