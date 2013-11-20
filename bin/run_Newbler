@@ -341,10 +341,10 @@ function startNEWBLER() {
 # check if it needed to be resumed:
 for N in {1..9}
 do
-    #LOG_FILE=${LOG_FILE/-job.log/-job.\$N.log}
+    #LOG_FILE=\${LOG_FILE/-job.log/-job.\$N.log}
     #echo Log_file: \$LOG_FILE >> \$LOG_FILE
 
-    PROGRESS_FILE="${OUTPUT_DIR}/assembly/454NewblerProgress.txt"
+    PROGRESS_FILE="\${OUTPUT_DIR}/assembly/454NewblerProgress.txt"
     last=\$(tail -n 1 \${PROGRESS_FILE})
 
     if [[ "\${last}" != *"Assembly computation succeeded at"* ]]; then
