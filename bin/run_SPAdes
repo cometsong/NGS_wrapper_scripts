@@ -92,12 +92,23 @@ CPUS=${CPUS:-8}
 QUEUE=${QUEUE:-default}
 #}}}
 
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Check and Set APP Vars ~~~{{{
 # check SEQ_FILE value forincluding a ' ' (between -type and filename)
 if [[ ! $(expr match "${SEQ_FILE}" ' ') ]] ; then
     return "SEQ_FILE must contain a leading sequence type (e.g -s, --12) then a space, then the file name!"
 fi
+
+# Set Default KMERS based on read type (higher for paired)
+# if match '-1 ' or '-12 ', then paired, elif starts with '-s ', single
+#   (presuming no filename ends with those, followed by spaces!)
+if [[ ${SEQ_FILE} =~ -12?\  ]] ; then
+    READTYPE='PAIRED'
+    KMERS=${KMERS:-"77,99,119,127"}
+elif [ $(expr match "${SEQ_FILE}" '-s ') ] ; then
+    READTYPE='SINGLE'
+    KMERS=${KMERS:-"55,77,99"}
+fi
+KMERS=${KMERS// /}      # remove all spaces in string, if mis-set in settings file
 
 # Default OUTDIR setting
 APP_OUTDIR="${OUTDIR:-${PROJECT_NAME}_k${KMERS//,/-}}"
@@ -112,6 +123,7 @@ DEBUG=${DEBUG:-"--debug"}
 # List of all app-specific variable names to be listed when job submitted
 APP_VARS=(
     SEQ_FILE
+    READTYPE
     KMERS
     THREADS
     MEM_GBS
