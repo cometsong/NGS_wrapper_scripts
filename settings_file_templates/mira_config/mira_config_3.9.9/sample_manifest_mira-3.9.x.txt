@@ -2,7 +2,7 @@
 project = MyFirstAssembly
 job = genome,denovo,accurate
 parameters = -GE:not=4 \
-    -MI:sonfs=no
+    -DIR:trt=$HOME
 
 readgroup = SomeUnpaired454ReadsIGotFromTheLab
 data = TCMFS456ZH345.fastq TQF92GT7H34.fastq

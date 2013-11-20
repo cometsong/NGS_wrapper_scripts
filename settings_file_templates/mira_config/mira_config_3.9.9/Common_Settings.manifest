@@ -3,3 +3,7 @@ parameters = \
     COMMON_SETTINGS \
         -GENERAL:number_of_threads=0 \
         -MISC:stop_on_nfs=no
+
+        # the following path to redirect to varies per server, 
+        # so we use the above "-MISC:stop_on_nfs=no" instead, for simplicity
+        #-DIR:tmp_redirected_to=$HOME
