@@ -26,6 +26,10 @@
 # set -o xtrace           # Print each command (expanded) to stdout before executing it (good for debugging)
 #}}}
 
+# Basic CMD Info Part 1
+APP_DESCRIPTION="mira sequence assembly"
+# see Part 2 for vars that need settings_file to determine
+
 # ---------------------------------------------------------------------------- #
 #                               Usage & Info                                {{{#
 # ---------------------------------------------------------------------------- #
@@ -100,7 +104,7 @@ APP_OUTDIR="${PROJECT_NAME}_assembly"
 #}}}
 
 # ---------------------------------------------------------------------------- #
-#                              Basic CMD Info                               {{{#
+#                              Basic CMD Info Part 2                        {{{#
 # ---------------------------------------------------------------------------- #
 
 # HOST Name setting:
@@ -139,7 +143,7 @@ else # some unknown hostname #{{{
 fi #}}}
 
 APP_CMD="${BIN_BASE}/mira"
-APP_DESCRIPTION="mira sequence assembly"
+#APP_DESCRIPTION="mira sequence assembly"    # see above, as it must be declared BEFORE usage()
 #}}}
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ APP Functions ~~~~~
