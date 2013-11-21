@@ -7,5 +7,6 @@
 --project=hybrid --job=mapping,genome,accurate,solexa
 -AS:nop=1
 -SB:bft=caf
+-MI:somnrl=0
 <&log_assembly.txt
 

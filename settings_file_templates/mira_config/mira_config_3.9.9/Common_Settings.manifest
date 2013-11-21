@@ -2,7 +2,8 @@
 parameters = \
     COMMON_SETTINGS \
         -GENERAL:number_of_threads=0 \
-        -MISC:stop_on_nfs=no
+        -MISC:stop_on_nfs=no \
+        -MISC:somnrl=0
 
         # the following path to redirect to varies per server, 
         # so we use the above "-MISC:stop_on_nfs=no" instead, for simplicity

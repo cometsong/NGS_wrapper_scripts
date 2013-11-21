@@ -3,6 +3,7 @@
 COMMON_SETTINGS  
     -GENERAL:number_of_threads=8
     -notraceinfo
+-MI:somnrl=0
 
 # OUTPUT:
 -OUTPUT:output_result_fasta=yes
