@@ -1,8 +1,7 @@
 --job=denovo,genome,accurate,iontor
 COMMON_SETTINGS  
     -GENERAL:number_of_threads=8
-    -MI:sonfs=no   
--MI:somnrl=0
+    -MI:somnrl=0
 
 # OUTPUT:
 -OUTPUT:output_result_fasta=yes
